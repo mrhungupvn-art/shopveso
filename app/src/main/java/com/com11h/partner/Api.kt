@@ -22,6 +22,7 @@ class Api(private val baseUrl: String, private val kcnId: Int, private var token
         val url = baseUrl.trimEnd('/') + "/api/index.php?action=" + action
         val b = Request.Builder().url(url)
             .addHeader("Accept", "application/json")
+            .addHeader("X-KCN-ID", kcnId.toString())
         token?.let { b.addHeader("Authorization", "Bearer $it") }
         if (body != null) b.post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaType())) else b.get()
         client.newCall(b.build()).execute().use { r ->
@@ -50,6 +51,7 @@ class Api(private val baseUrl: String, private val kcnId: Int, private var token
         val url = baseUrl.trimEnd('/') + "/api/index.php?action=" + action
         val request = Request.Builder().url(url)
             .addHeader("Accept", "application/json")
+            .addHeader("X-KCN-ID", kcnId.toString())
             .apply { token?.let { addHeader("Authorization", "Bearer $it") } }
             .post(builder.build())
             .build()

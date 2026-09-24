@@ -38,7 +38,32 @@ class MainActivity : AppCompatActivity() {
         shell(); box.addView(title("🏪 VESO SHOP\nQuản lý vé và đơn hàng"))
         val u = field("Tài khoản"); val p = field("Mật khẩu", true); box.addView(u); box.addView(p)
         val b = Button(this).apply { text = "ĐĂNG NHẬP" }; status = TextView(this); box.addView(b); box.addView(status)
-        b.setOnClickListener { async { val j = Api(BuildConfig.API_BASE_URL, 1).call("partner_login", JSONObject().put("username", u.text.toString().trim()).put("password", p.text.toString())); val t=j.getString("token"); val partner=j.getJSONObject("partner"); session.save(t,1,partner.optString("shop_name"),partner.optInt("shop_id")); api=Api(BuildConfig.API_BASE_URL,1,t); ui { showApp() } } }
+        b.setOnClickListener {
+            async {
+                val username = u.text.toString().trim()
+                val password = p.text.toString()
+                val j = Api(BuildConfig.API_BASE_URL, session.kcnId() ?: DEFAULT_KCN_ID).call(
+                    "partner_login",
+                    JSONObject().put("username", username).put("password", password).put("device", Build.MODEL)
+                )
+                val data = j.optJSONObject("data")
+                    ?: throw ApiException("Máy chủ trả về dữ liệu đăng nhập không hợp lệ.")
+                val token = data.optString("token").trim()
+                if (token.isBlank()) throw ApiException("Máy chủ không trả về token đăng nhập.")
+                val partner = data.optJSONObject("partner")
+                    ?: throw ApiException("Máy chủ không trả về thông tin Shop.")
+                val kcnId = session.kcnId() ?: DEFAULT_KCN_ID
+                session.save(
+                    token,
+                    kcnId,
+                    partner.optString("store_name", partner.optString("shop_name")),
+                    partner.optInt("store_id", partner.optInt("shop_id")),
+                    partner.optString("category")
+                )
+                api = Api(BuildConfig.API_BASE_URL, kcnId, token)
+                ui { showApp() }
+            }
+        }
     }
 
     private fun showApp() {
@@ -49,13 +74,13 @@ class MainActivity : AppCompatActivity() {
         startService(Intent(this, OrderAlertService::class.java)); loadProducts()
     }
 
-    private fun loadProducts() { async { val a=api.call("partner_products").optJSONArray("products") ?: org.json.JSONArray(); ui { clearContent(); if(a.length()==0) addText("Chưa đăng vé.") else for(i in 0 until a.length()){val o=a.getJSONObject(i);addText("${o.optString("provider_name")} • ${o.optString("draw_date")}\nGiá cố định: ${money(o.optInt("face_value"))}\nĐang có: ${o.optInt("quantity")-o.optInt("sold_quantity")} vé")} } } }
+    private fun loadProducts() { async { val a=api.call("partner_products").optJSONObject("data")?.optJSONArray("products") ?: org.json.JSONArray(); ui { clearContent(); if(a.length()==0) addText("Chưa đăng vé.") else for(i in 0 until a.length()){val o=a.getJSONObject(i);addText("${o.optString("provider_name")} • ${o.optString("draw_date")}\nGiá cố định: ${money(o.optInt("face_value"))}\nĐang có: ${o.optInt("quantity")-o.optInt("sold_quantity")} vé")} } } }
 
-    private fun loadOrders() { async { val a=api.call("partner_orders").optJSONArray("orders") ?: org.json.JSONArray(); ui { clearContent(); if(a.length()==0) addText("Chưa có đơn.") else for(i in 0 until a.length()){val o=a.getJSONObject(i);val b=Button(this).apply{text="${o.optString("code")}\n${o.optString("customer_name")} • ${o.optString("customer_phone")}\n${o.optString("status")} • ${money(o.optInt("total"))}"}; b.setOnClickListener{ if(o.optString("status")=="PENDING") confirmOrder(o.getInt("id")) }; box.addView(b) } } } }
+    private fun loadOrders() { async { val a=api.call("partner_orders").optJSONObject("data")?.optJSONArray("orders") ?: org.json.JSONArray(); ui { clearContent(); if(a.length()==0) addText("Chưa có đơn.") else for(i in 0 until a.length()){val o=a.getJSONObject(i);val b=Button(this).apply{text="${o.optString("code")}\n${o.optString("customer_name")} • ${o.optString("customer_phone")}\n${o.optString("status")} • ${money(o.optInt("total"))}"}; b.setOnClickListener{ if(o.optString("status")=="PENDING") confirmOrder(o.getInt("id")) }; box.addView(b) } } } }
 
     private fun confirmOrder(id:Int) { AlertDialog.Builder(this).setTitle("Xác nhận đơn").setMessage("Xác nhận Shop đã nhận và chuẩn bị đơn này?").setPositiveButton("XÁC NHẬN"){_,_->async{api.call("partner_confirm",JSONObject().put("order_id",id));ui{loadOrders()}}}.setNegativeButton("HỦY",null).show() }
 
-    private fun publishDialog() { async { val a=api.call("draws").optJSONArray("draws") ?: org.json.JSONArray(); ui { if(a.length()==0){status.text="Chưa có kỳ xổ mở";return@ui}; val labels=Array(a.length()){i->val o=a.getJSONObject(i);"${o.optString("provider_name")} • ${o.optString("draw_date")} • ${money(o.optInt("face_value"))}"}; AlertDialog.Builder(this).setTitle("Chọn kỳ xổ").setSingleChoiceItems(labels,-1){d,which->d.dismiss(); quantityDialog(a.getJSONObject(which).getInt("id"))}.show() } } }
+    private fun publishDialog() { async { val a=api.call("draws").optJSONObject("data")?.optJSONArray("draws") ?: org.json.JSONArray(); ui { if(a.length()==0){status.text="Chưa có kỳ xổ mở";return@ui}; val labels=Array(a.length()){i->val o=a.getJSONObject(i);"${o.optString("provider_name")} • ${o.optString("draw_date")} • ${money(o.optInt("face_value"))}"}; AlertDialog.Builder(this).setTitle("Chọn kỳ xổ").setSingleChoiceItems(labels,-1){d,which->d.dismiss(); quantityDialog(a.getJSONObject(which).getInt("id"))}.show() } } }
 
     private fun quantityDialog(drawId:Int) { val q=EditText(this).apply{hint="Số lượng";inputType=InputType.TYPE_CLASS_NUMBER;setText("1")}; AlertDialog.Builder(this).setTitle("Số lượng vé").setView(q).setPositiveButton("ĐĂNG"){_,_->async{val n=q.text.toString().toIntOrNull()?.coerceAtLeast(1)?:throw RuntimeException("Số lượng không hợp lệ");api.call("partner_publish",JSONObject().put("draw_id",drawId).put("quantity",n));ui{loadProducts()}}}.setNegativeButton("HỦY",null).show() }
 
@@ -66,4 +91,8 @@ class MainActivity : AppCompatActivity() {
     private fun money(n:Int)="%,d đ".format(n).replace(',','.')
     private fun ui(f:()->Unit)=runOnUiThread(f)
     private fun async(f:()->Unit){thread{try{f()}catch(e:Exception){ui{status.text=e.message ?: "Có lỗi xảy ra"}}}}
+
+    companion object {
+        private const val DEFAULT_KCN_ID = 1
+    }
 }
