@@ -68,3 +68,17 @@ KHÔNG ký (đủ để cài thử, chưa nộp được Play Store).
 ```bash
 gradle :app:assembleDebug
 ```
+
+## Release APK signing
+
+The release APK is now required to be signed. The normal `Android Shop APK` workflow stops with an error when the release keystore secrets are missing, so it will never upload an unsigned APK.
+
+For the first signing setup, run **Actions → Bootstrap COM11H Shop Signing** manually. That workflow creates a new release keystore, builds a signed APK, and uploads a short-lived artifact containing the APK and the four signing values needed for GitHub Actions. Save those values in **Settings → Secrets and variables → Actions** as:
+
+- `KEYSTORE_BASE64`
+- `KEYSTORE_PASSWORD`
+- `KEY_ALIAS`
+- `KEY_PASSWORD`
+
+After those four secrets are stored, use the normal **Android Shop APK** workflow for future builds. Keep the keystore and signing values private and backed up; they are required for future app updates.
+
