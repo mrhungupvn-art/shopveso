@@ -5,6 +5,15 @@
 backend (`com11h.com/api/index.php`) nhưng token, package name và luồng
 nghiệp vụ đều riêng.
 
+## Các module hiện có trong app V7
+
+- Tổng quan: vé bán hôm nay, đơn đã thanh toán, doanh thu, tồn kho, đơn chờ và đối soát.
+- Kho vé số: upload ảnh vé, thêm vé, cập nhật tồn kho/ảnh, gửi giá đề xuất.
+- Đơn hàng: đơn mới, đang chuẩn bị, lịch sử; xác nhận, từ chối và báo sẵn sàng.
+- Thống kê: 7/30/90 ngày, vé đã bán, số đơn, doanh thu, doanh số theo ngày và vé bán nhiều.
+- Đối soát: tổng tiền chờ/đã thanh toán và lịch sử giao dịch.
+- Tài khoản: thông tin Shop, hợp đồng điện tử và đăng xuất.
+
 ## Vì sao có app này
 Trước đây tiệm chỉ có **web portal** (`admin/login.php` → `admin/foods.php`)
 để đăng/sửa món ăn. Nhưng khi có đơn hàng mới, tiệm KHÔNG có cách nào biết
