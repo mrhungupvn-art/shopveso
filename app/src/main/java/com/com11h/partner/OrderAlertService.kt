@@ -69,15 +69,17 @@ class OrderAlertService : Service() {
             val kcn = session.kcnId() ?: 0
             if (!token.isNullOrBlank() && kcn > 0) {
                 try {
-                    val j = Api(BuildConfig.API_BASE_URL, kcn, token).call("partner_orders")
-                    val arr = j.optJSONArray("orders")
+                    val j = Api(BuildConfig.API_BASE_URL, kcn, token).call("partner_pending_pickups")
+                    val arr = j.optJSONObject("data")?.optJSONArray("pickups")
                         ?: org.json.JSONArray()
 
                     val currentIds = mutableSetOf<String>()
                     for (i in 0 until arr.length()) {
                         val o = arr.optJSONObject(i)
-                        val id = o?.optInt("id", 0) ?: 0
-                        if (id > 0 && o?.optString("status") == "PENDING") currentIds.add(id.toString())
+                        val id = o?.optInt("pickup_id", 0) ?: 0
+                        val payment = o?.optString("payment_status").orEmpty()
+                        val pickupStatus = o?.optString("pickup_status").orEmpty()
+                        if (id > 0 && payment == "paid" && pickupStatus == "pending") currentIds.add(id.toString())
                     }
 
                     val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
