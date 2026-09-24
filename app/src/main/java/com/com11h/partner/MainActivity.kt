@@ -45,8 +45,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showLogin() {
         shell()
-        box.addView(title("🏪 VESO SHOP
-Quản lý vé và đơn hàng"))
+        box.addView(title("🏪 VESO SHOP" + System.lineSeparator() + "Quản lý vé và đơn hàng"))
         val u = field("Tài khoản")
         val p = field("Mật khẩu", true)
         box.addView(u)
@@ -144,12 +143,9 @@ Quản lý vé và đơn hàng"))
                             else -> if (price > 0) "Đã có giá" else "Chưa có giá"
                         }
                         addText(
-                            "🎟️ ${o.optString("name")}
-" +
-                                "Giá: ${if (price > 0) money(price) else "Chờ Admin quyết định"}
-" +
-                                "Tồn: ${o.optInt("stock")}
-$statusText"
+                            "🎟️ ${o.optString("name")}" + System.lineSeparator() +
+                                "Giá: ${if (price > 0) money(price) else "Chờ Admin quyết định"}" + System.lineSeparator() +
+                                "Tồn: ${o.optInt("stock")}" + System.lineSeparator() + statusText
                         )
                     }
                     if (permissions != null) {
@@ -179,13 +175,20 @@ $statusText"
                         }.orEmpty()
                         val b = Button(this).apply {
                             text = buildString {
-                                append("${o.optString("code")}
-")
-                                append("${o.optString("customer")} • ${o.optString("phone")}
-")
-                                if (itemText.isNotBlank()) append("$itemText
-")
-                                append("Thanh toán: ${o.optString("payment_status")} • ${o.optString("pickup_status")}")
+                                append(o.optString("code"))
+                                append(System.lineSeparator())
+                                append(o.optString("customer"))
+                                append(" • ")
+                                append(o.optString("phone"))
+                                append(System.lineSeparator())
+                                if (itemText.isNotBlank()) {
+                                    append(itemText)
+                                    append(System.lineSeparator())
+                                }
+                                append("Thanh toán: ")
+                                append(o.optString("payment_status"))
+                                append(" • ")
+                                append(o.optString("pickup_status"))
                             }
                         }
                         b.setOnClickListener { orderDialog(o) }
@@ -208,9 +211,9 @@ $statusText"
         AlertDialog.Builder(this)
             .setTitle("Đơn ${o.optString("code")}")
             .setMessage(
-                "Khách: ${o.optString("customer")}\n" +
-                    "SĐT: ${o.optString("phone")}\n" +
-                    "Địa chỉ: ${o.optString("address")}\n" +
+                "Khách: ${o.optString("customer")}" + System.lineSeparator() +
+                    "SĐT: ${o.optString("phone")}" + System.lineSeparator() +
+                    "Địa chỉ: ${o.optString("address")}" + System.lineSeparator() +
                     "Trạng thái Shop: $statusNow"
             )
             .setItems(buttons.toTypedArray()) { dialog, which ->
