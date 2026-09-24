@@ -292,7 +292,7 @@ class MainActivity : AppCompatActivity() {
         val lines = StringBuilder()
         lines.append("Mã đơn: ${o.optString("code")}").append('\n')
         lines.append("Thanh toán: ${o.optString("payment_status")}").append('\n')
-        lines.append("Trạng thái Shop: $statusNow").append('\n\n')
+        lines.append("Trạng thái Shop: $statusNow").append("\n\n")
         val items = o.optJSONArray("items") ?: JSONArray()
         for (i in 0 until items.length()) {
             val x = items.optJSONObject(i) ?: continue
