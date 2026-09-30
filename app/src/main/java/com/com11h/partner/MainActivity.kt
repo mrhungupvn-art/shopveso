@@ -721,6 +721,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun money(n: Long) = String.format(Locale.US, "%,d đ", n).replace(',', '.')
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+    private fun toast(message: String) {
+        runOnUiThread { Toast.makeText(this, message, Toast.LENGTH_SHORT).show() }
+    }
+
     private fun ui(f: () -> Unit) = runOnUiThread(f)
 
     private fun async(f: () -> Unit) {
